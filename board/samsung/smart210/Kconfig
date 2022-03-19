@@ -1,0 +1,15 @@
+if TARGET_SMDKC100
+
+config SYS_BOARD
+	default "smart210"
+
+config SYS_VENDOR
+	default "samsung"
+
+config SYS_SOC
+	default "s5pv210"
+
+config SYS_CONFIG_NAME
+	default "smart210"
+
+endif
