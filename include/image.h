@@ -262,18 +262,18 @@ enum {
  * all data in network byte order (aka natural aka bigendian).
  */
 typedef struct image_header {
-	uint32_t	ih_magic;	/* Image Header Magic Number	*/
-	uint32_t	ih_hcrc;	/* Image Header CRC Checksum	*/
-	uint32_t	ih_time;	/* Image Creation Timestamp	*/
-	uint32_t	ih_size;	/* Image Data Size		*/
-	uint32_t	ih_load;	/* Data	 Load  Address		*/
-	uint32_t	ih_ep;		/* Entry Point Address		*/
-	uint32_t	ih_dcrc;	/* Image Data CRC Checksum	*/
-	uint8_t		ih_os;		/* Operating System		*/
-	uint8_t		ih_arch;	/* CPU architecture		*/
-	uint8_t		ih_type;	/* Image Type			*/
-	uint8_t		ih_comp;	/* Compression Type		*/
-	uint8_t		ih_name[IH_NMLEN];	/* Image Name		*/
+	uint32_t	ih_magic;	/* Image Header Magic Number 固定为0x27051956，占4字节，方便uboot判断要启动的镜像是否为uimage格式 */
+	uint32_t	ih_hcrc;	/* Image Header CRC Checksum 镜像头部CRC校验码 */
+	uint32_t	ih_time;	/* Image Creation Timestamp	镜像创建时间戳 */
+	uint32_t	ih_size;	/* Image Data Size 镜像数据大小(不算头部) */
+	uint32_t	ih_load;	/* Data	 Load  Address 镜像数据将要载入的内存地址 */
+	uint32_t	ih_ep;		/* Entry Point Address 镜像入口地址 */
+	uint32_t	ih_dcrc;	/* Image Data CRC Checksum 镜像数据CRC校验码 */
+	uint8_t		ih_os;		/* Operating System	操作系统类型 */
+	uint8_t		ih_arch;	/* CPU architecture	CPU架构 */
+	uint8_t		ih_type;	/* Image Type 镜像类型*/
+	uint8_t		ih_comp;	/* Compression Type	压缩类型 */
+	uint8_t		ih_name[IH_NMLEN];	/* Image Name 镜像名字ih_name,共32字节 */
 } image_header_t;
 
 typedef struct image_info {

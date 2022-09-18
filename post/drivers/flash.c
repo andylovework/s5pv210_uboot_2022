@@ -11,6 +11,9 @@
 #include <post.h>
 #include <flash.h>
 
+#define CONFIG_POST 1
+#define CONFIG_SYS_POST_FLASH 1
+
 #if CONFIG_POST & CONFIG_SYS_POST_FLASH
 
 /*

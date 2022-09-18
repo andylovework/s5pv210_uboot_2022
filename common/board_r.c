@@ -592,11 +592,11 @@ static int run_main_loop(void)
  * TODO: perhaps reset the watchdog in the initcall function after each call?
  */
 static init_fnc_t init_sequence_r[] = {
-	initr_trace,
-	initr_reloc,
+	initr_trace, /* /如果定义了宏 CONFIG_TRACE 的话就会调用函数 trace_init，初始化和调试跟踪有关的内容 */
+	initr_reloc, /* 标记重定位完成 */
 	/* TODO: could x86/PPC have this also perhaps? */
 #if defined(CONFIG_ARM) || defined(CONFIG_RISCV)
-	initr_caches,
+	initr_caches, /* 初始化cache，并使能cache */
 	/* Note: For Freescale LS2 SoCs, new MMU table is created in DDR.
 	 *	 A temporary mapping of IFC high region is since removed,
 	 *	 so environmental variables in NOR flash is not available
@@ -604,14 +604,14 @@ static init_fnc_t init_sequence_r[] = {
 	 *	 region.
 	 */
 #endif
-	initr_reloc_global_data,
+	initr_reloc_global_data, /* 初始化重定位后的gd相关成员变量 */
 #if defined(CONFIG_SYS_INIT_RAM_LOCK) && defined(CONFIG_E500)
 	initr_unlock_ram_in_cache,
 #endif
-	initr_barrier,
-	initr_malloc,
+	initr_barrier, /* I.MX没用到 */
+	initr_malloc, /* 初始化malloc区域 */
 	log_init,
-	initr_bootstage,	/* Needs malloc() but has its own timer */
+	initr_bootstage,	/* Needs malloc() but has its own timer 初始化启动状态 */
 #if defined(CONFIG_CONSOLE_RECORD)
 	console_record_init,
 #endif
@@ -646,9 +646,9 @@ static init_fnc_t init_sequence_r[] = {
 	arch_fsp_init_r,
 #endif
 	initr_dm_devices,
-	stdio_init_tables,
+	stdio_init_tables, /* stdio相关初始化 */
 	serial_initialize,
-	initr_announce,
+	initr_announce, /* 与调试有关，通知已在ram运行 */
 	dm_announce,
 #if CONFIG_IS_ENABLED(WDT)
 	initr_watchdog,
@@ -689,13 +689,13 @@ static init_fnc_t init_sequence_r[] = {
 	cpu_init_r,
 #endif
 #ifdef CONFIG_CMD_NAND
-	initr_nand,
+	initr_nand, /* 初始化nand */
 #endif
 #ifdef CONFIG_CMD_ONENAND
 	initr_onenand,
 #endif
 #ifdef CONFIG_MMC
-	initr_mmc,
+	initr_mmc, /* 初始化emmc */
 #endif
 #ifdef CONFIG_XEN
 	xen_init,
@@ -739,7 +739,7 @@ static init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_CMD_KGDB
 	kgdb_init,
 #endif
-	interrupt_init,
+	interrupt_init, /*  初始化中断 */
 #if defined(CONFIG_MICROBLAZE) || defined(CONFIG_M68K)
 	timer_init,		/* initialize timer */
 #endif
@@ -748,13 +748,13 @@ static init_fnc_t init_sequence_r[] = {
 #endif
 	/* PPC has a udelay(20) here dating from 2002. Why? */
 #ifdef CONFIG_CMD_NET
-	initr_ethaddr,
+	initr_ethaddr, /* 初始化网络MAC */
 #endif
 #if defined(CONFIG_GPIO_HOG)
 	gpio_hog_probe_all,
 #endif
 #ifdef CONFIG_BOARD_LATE_INIT
-	board_late_init,
+	board_late_init, /* 板子后续初始化 */
 #endif
 #if defined(CONFIG_SCSI) && !defined(CONFIG_DM_SCSI)
 	INIT_FUNC_WATCHDOG_RESET
@@ -768,7 +768,7 @@ static init_fnc_t init_sequence_r[] = {
 #endif
 #ifdef CONFIG_CMD_NET
 	INIT_FUNC_WATCHDOG_RESET
-	initr_net,
+	initr_net, /* 初始化网络设备 */
 #endif
 #ifdef CONFIG_POST
 	initr_post,
@@ -791,7 +791,7 @@ static init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_EFI_SETUP_EARLY
 	(init_fnc_t)efi_init_obj_list,
 #endif
-	run_main_loop,
+	run_main_loop, /* 主循环，处理命令 */
 };
 
 void board_init_r(gd_t *new_gd, ulong dest_addr)

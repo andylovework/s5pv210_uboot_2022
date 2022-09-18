@@ -10,8 +10,8 @@
 #include <asm/psci.h>
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
-OUTPUT_ARCH(arm)
-ENTRY(_start)
+OUTPUT_ARCH(arm) /* 可执行平台为RAM */
+ENTRY(_start) /* 指定程序的入口为_start */
 SECTIONS
 {
 #ifndef CONFIG_CMDLINE
@@ -35,13 +35,13 @@ SECTIONS
 	 */
 	/DISCARD/ : { *(.rel._secure*) }
 #endif
-	. = 0x00000000;
+	. = 0x00000000; /* 定位当前地址为0地址 */
 
-	. = ALIGN(4);
+	. = ALIGN(4); /* 代码以4字节对齐 */
 	.text :
 	{
-		*(.__image_copy_start)
-		*(.vectors)
+		*(.__image_copy_start) /*  映像文件复制起始地 */
+		*(.vectors) /* 启动函数 */
 		CPUDIR/start.o (.text*)
 	}
 

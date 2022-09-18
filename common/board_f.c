@@ -818,14 +818,14 @@ __weak int clear_bss(void)
 }
 
 static const init_fnc_t init_sequence_f[] = {
-	setup_mon_len,
+	setup_mon_len, /* __bss_end-_start是整个代码的长度, 镜像大小，大约600-700k，也是要拷贝的的代码大小 */
 #ifdef CONFIG_OF_CONTROL
 	fdtdec_setup,
 #endif
 #ifdef CONFIG_TRACE_EARLY
 	trace_early_init,
 #endif
-	initf_malloc,
+	initf_malloc, /* 里面设置了malloc大小0x400 */
 	log_init,
 	initf_bootstage,	/* uses its own timer, so does not need DM */
 #ifdef CONFIG_BLOBLIST
@@ -838,7 +838,7 @@ static const init_fnc_t init_sequence_f[] = {
 #if defined(CONFIG_HAVE_FSP)
 	arch_fsp_init,
 #endif
-	arch_cpu_init,		/* basic arch cpu dependent setup */
+	arch_cpu_init,		/* basic arch cpu dependent setup 初始化架构有关的工作，CPU级别 */
 	mach_cpu_init,		/* SoC/machine dependent CPU setup */
 	initf_dm,
 	arch_cpu_init_dm,
@@ -848,7 +848,7 @@ static const init_fnc_t init_sequence_f[] = {
 #if defined(CONFIG_PPC) || defined(CONFIG_SYS_FSL_CLK) || defined(CONFIG_M68K)
 	/* get CPU and bus clocks according to the environment variable */
 	get_clocks,		/* get CPU and bus clocks (etc.) */
-#endif
+#endifnc_i2c
 #if !defined(CONFIG_M68K)
 	timer_init,		/* initialize timer */
 #endif
@@ -858,8 +858,8 @@ static const init_fnc_t init_sequence_f[] = {
 	env_init,		/* initialize environment */
 	init_baud_rate,		/* initialze baudrate settings */
 	serial_init,		/* serial communications setup */
-	console_init_f,		/* stage 1 init of console */
-	display_options,	/* say that we are here */
+	console_init_f,		/* stage 1 init of console，设置 gd->have_console 为 1，打开控制台，初始化之前是把环境放在缓冲区里，这个为1时正好打印 */
+	display_options,	/* say that we are here 通过串口输出一些信息 */
 	display_text_info,	/* show debugging info if required */
 	checkcpu,
 #if defined(CONFIG_SYSRESET)
@@ -872,27 +872,27 @@ static const init_fnc_t init_sequence_f[] = {
 	embedded_dtb_select,
 #endif
 #if defined(CONFIG_DISPLAY_BOARDINFO)
-	show_board_info,
+	show_board_info, /* 打印板子信息 */
 #endif
-	INIT_FUNC_WATCHDOG_INIT
+	INIT_FUNC_WATCHDOG_INIT /* 初始化看门狗 */
 #if defined(CONFIG_MISC_INIT_F)
 	misc_init_f,
 #endif
-	INIT_FUNC_WATCHDOG_RESET
+	INIT_FUNC_WATCHDOG_RESET /* 复位看门狗 */
 #if CONFIG_IS_ENABLED(SYS_I2C_LEGACY)
-	init_func_i2c,
+	init_func_i2c, /* 初始化i2c */
 #endif
 #if defined(CONFIG_VID) && !defined(CONFIG_SPL)
 	init_func_vid,
 #endif
-	announce_dram_init,
-	dram_init,		/* configure available RAM banks */
+	announce_dram_init, /* 输出字符串“DRAM” */
+	dram_init,		/* configure available RAM banks 并不是初始化DRAM只是设置这个值为512M ，是通过读取SD卡的配置信息初始化dram */
 #ifdef CONFIG_POST
-	post_init_f,
+	post_init_f, /* 用来完成测试  */
 #endif
 	INIT_FUNC_WATCHDOG_RESET
 #if defined(CONFIG_SYS_DRAM_TEST)
-	testdram,
+	testdram, /* 测试ddr，空函数 */
 #endif /* CONFIG_SYS_DRAM_TEST */
 	INIT_FUNC_WATCHDOG_RESET
 
@@ -912,36 +912,36 @@ static const init_fnc_t init_sequence_f[] = {
 	 *  - monitor code
 	 *  - board info struct
 	 */
-	setup_dest_addr,
+	setup_dest_addr, /* 设置gd->ram_size，gd->ram_top，gd->relocaddr这三个的值 */
 #ifdef CONFIG_OF_BOARD_FIXUP
 	fix_fdt,
 #endif
 #ifdef CONFIG_PRAM
 	reserve_pram,
 #endif
-	reserve_round_4k,
-	arch_reserve_mmu,
+	reserve_round_4k, /* gd->relocaddr四字节对齐，本来就4k对齐，所以不需要了 */
+	arch_reserve_mmu, /* 留出mmu区域(内存映射单元)，0x4000,所以要减去 */
 	reserve_video,
-	reserve_trace,
-	reserve_uboot,
-	reserve_malloc,
-	reserve_board,
-	reserve_global_data,
-	reserve_fdt,
+	reserve_trace, /* 留出调试跟踪的内存，没有用到 */
+	reserve_uboot, /* reserve_uboot， 留出重定位后的 uboot 所占用的内存区域，uboot 所占用大小由gd->mon_len 所指定，留出 uboot 的空间以后还要对 gd->relocaddr 做 4K 字节对齐，并且重新设置 gd->start_addr_sp */
+	reserve_malloc, /* 留出 malloc 区域，调整 gd->start_addr_sp 位置，malloc 区域由宏TOTAL_MALLOC_LEN 定义 */
+	reserve_board, /* 留出板子 bd 所占的内存区，bd 是结构体 bd_t，bd_t 大小为80 字节 */
+	reserve_global_data, /* 保留出 gd_t 的内存区域，gd_t 结构体大小为 248B */
+	reserve_fdt, /* 留出设备树相关的内存区域，I.MX6ULL 的 uboot 没有用到 */
 	reserve_bootstage,
 	reserve_bloblist,
 	reserve_arch,
-	reserve_stacks,
+	reserve_stacks, /* 留出栈空间，先对 gd->start_addr_sp 减去 16，然后做 16 字节对其。如果使能 IRQ 的话还要留出 IRQ 相应的内存,在本 uboot 中并没有使用到 IRQ */
 	dram_init_banksize,
-	show_dram_config,
+	show_dram_config, /* 显示dram信息 */
 	INIT_FUNC_WATCHDOG_RESET
 	setup_bdinfo,
-	display_new_sp,
+	display_new_sp, /* 显示新的 sp 位置，也就是 gd->start_addr_sp，不过要定义宏 DEBUG */
 	INIT_FUNC_WATCHDOG_RESET
-	reloc_fdt,
+	reloc_fdt, /* 函数用于重定位 fdt，没有用到 */
 	reloc_bootstage,
 	reloc_bloblist,
-	setup_reloc,
+	setup_reloc, /* 设置 gd 的其他一些成员变量，供后面重定位的时候使用，并且将以前的 gd（R9） 拷贝到 gd->new_gd 处。需要使能 DEBUG 才能看到相应的信息输出 */
 #if defined(CONFIG_X86) || defined(CONFIG_ARC)
 	copy_uboot_to_ram,
 	do_elf_reloc_fixups,
